@@ -5,11 +5,13 @@ const  {
     addApplication,
     getApplications,
     updateApplication,
-    deleteApplication
+    deleteApplication,
+    getStats
 } = require('../controllers/applicationController');
 
 router.post('/', verifyToken, addApplication);
 router.get('/', verifyToken, getApplications);
+router.get('/stats', verifyToken, getStats);
 router.put('/:id', verifyToken, updateApplication);
 router.delete('/:id', verifyToken, deleteApplication);
 

@@ -99,9 +99,31 @@ const deleteApplication = async (req, res) =>  {
     }
 }
 
+    const getStats = async (req, res) =>  {
+        const user_id = req.user.id;
+
+        try  {
+            const stats = await pool.query(
+                `SELECT
+                    COUNT(*) AS total,
+                    COUNT(CASE WHEN status = 'Applied' THEN 1 END) AS applied,
+                    COUNT(CASE WHEN status = 'Interview Scheduled' THEN 1 END) AS interviews,
+                    COUNT(CASE WHEN status = 'Rejected' THEN 1 END) AS rejected,
+                    COUNT(CASE WHEN status = 'Offer Received' THEN 1 END) AS offers
+                    FROM applications
+                    WHERE user_id = $1`,
+                    [user_id]
+            );
+            res.status(200).json({stats: stats.rows[0]});
+        } catch(err)  {
+            res.status(500).json({ message: 'Server error.', error: err.message });
+        }
+    };
+
 module.exports = { 
     addApplication, 
     getApplications, 
     updateApplication, 
-    deleteApplication 
+    deleteApplication,
+    getStats 
 };

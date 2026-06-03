@@ -10,9 +10,14 @@ app.use(express.json());
 
 const authRoutes = require('./routes/authRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
+const { sendReminders } = require('./controllers/reminderController');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/reminders', reminderRoutes);
+
+setInterval(sendReminders, 5 * 60 * 1000);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Job Tracker API is running!' });
