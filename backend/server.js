@@ -19,6 +19,11 @@ app.use('/api/reminders', reminderRoutes);
 
 setInterval(sendReminders, 5 * 60 * 1000);
 
+app.get('/test-reminders', async (req, res) => {
+  await sendReminders();
+  res.json({ message: 'Reminders checked!' });
+});
+
 app.get('/', (req, res) => {
   res.json({ message: 'Job Tracker API is running!' });
 });
