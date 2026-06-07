@@ -13,11 +13,13 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
 const { sendReminders } = require('./controllers/reminderController');
 const resumeRoutes = require('./routes/resumeRoutes');
+const exportRoutes = require('./routes/exportRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/resume', resumeRoutes);
+app.use('/api/export', exportRoutes);
 
 setInterval(sendReminders, 5 * 60 * 1000);
 
