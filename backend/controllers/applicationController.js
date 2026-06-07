@@ -146,10 +146,66 @@ const getStats = async (req, res) => {
     }
 };
 
+const getAnalytics = async (req, res) =>  {
+    const user_id = req.user.id;
+
+    try  {
+        const statusBreakdown = await pool.query(
+            `SELECT status, COUNT(*) as count
+            FROM applications
+            WHERE user_id = $1
+            GROUP BY status`,
+            [user_id]
+        );
+
+        const monthlyTrend = await pool.query(
+            `SELECT 
+            TO_CHAR(date_applied, 'Mon YYYY') AS month,
+            COUNT(*) as count
+            FROM applications
+            WHERE user_id = $1
+            GROUP BY TO_CHAR(date_applied, 'Mon YYYY'), DATE_TRUNC('month', date_applied)
+            ORDER BY DATE_TRUNC('month', date_applied) ASC`,
+            [user_id]
+        );
+
+        const weeklyTrend = await pool.query(
+            `SELECT 
+            TO_CHAR(date_applied, 'Day') as day, 
+            COUNT(*) as count
+            FROM applications
+            WHERE user_id = $1
+            AND date_applied >= NOW() - INTERVAL '7 days'
+            GROUP BY TO_CHAR(date_applied, 'Day')`,
+            [user_id]
+        );
+
+        const topCompanies = await pool.query(
+            `SELECT company, COUNT(*) as count
+            FROM applications
+            WHERE user_id = $1
+            GROUP BY company
+            ORDER BY count DESC
+            LIMIT 5`,
+            [user_id]
+        );
+
+        res.status(200).json({
+            statusBreakdown: statusBreakdown.rows,
+            monthlyTrend: monthlyTrend.rows,
+            weeklyTrend: weeklyTrend.rows,
+            topCompanies: topCompanies.rows
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error.', error: err.message });
+    }
+};
+
 module.exports = {
     addApplication,
     getApplications,
     updateApplication,
     deleteApplication,
-    getStats
+    getStats,
+    getAnalytics
 };

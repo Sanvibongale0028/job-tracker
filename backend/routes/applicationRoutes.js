@@ -6,12 +6,14 @@ const  {
     getApplications,
     updateApplication,
     deleteApplication,
-    getStats
+    getStats,
+    getAnalytics
 } = require('../controllers/applicationController');
 
 router.post('/', verifyToken, addApplication);
 router.get('/', verifyToken, getApplications);
 router.get('/stats', verifyToken, getStats);
+router.get('/analytics', verifyToken, getAnalytics);
 router.put('/:id', verifyToken, updateApplication);
 router.delete('/:id', verifyToken, deleteApplication);
 
