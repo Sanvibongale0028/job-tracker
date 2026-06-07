@@ -5,7 +5,7 @@ const addApplication = async (req, res) => {
     const { company, role, status, date_applied, notes } = req.body;
     const user_id = req.user.id;
 
-    try  {
+    try {
         const newApplication = await pool.query(
             'INSERT INTO applications (user_id, company, role, status, date_applied, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
             [user_id, company, role, status, date_applied, notes]
@@ -16,49 +16,75 @@ const addApplication = async (req, res) => {
             application: newApplication.rows[0]
         });
 
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({ message: 'Server error.', error: err.message });
     }
 };
 
-const getApplications = async (req, res) =>  {
+const getApplications = async (req, res) => {
     const user_id = req.user.id;
-    const { status } = req.query;  
+    const { status, search, sortBy, order, role } = req.query;
 
-    try  {
+    try {
         let query = 'SELECT * FROM applications WHERE user_id = $1';
         let params = [user_id];
+        let paramCount = 1;
 
-        if(status)  {
-            query += ' AND status = $2';
+        if (status) {
+            paramCount++;
+            query += ` AND status = $${paramCount}`;
             params.push(status);
         }
 
-        query += ' ORDER BY date_applied DESC';
+        if (role) {
+        paramCount++;
+        query += ` AND role ILIKE $${paramCount}`;
+        params.push(`%${role}%`);
+        }
+
+        if(search)  {
+            paramCount++;
+            query += ` AND (company ILIKE $${paramCount} OR role ILIKE $${paramCount})`;
+            params.push(`%${search}%`);
+        }
+
+        const validSortFields = ['date_applied', 'company', 'role', 'status', 'created_at'];
+        const validOrders = ['ASC', 'DESC'];
+
+        const sortField = validSortFields.includes(sortBy) ? sortBy : 'created_at';
+        const sortOrder = validOrders.includes(order?.toUpperCase()) ? order.toUpperCase() : 'DESC';
+
+        query += ` ORDER BY ${sortField} ${sortOrder}`;
 
         const applications = await pool.query(query, params);
+        console.log('sortBy:', sortBy);
+        console.log('order:', order);
+        console.log('sortField:', sortField);
+        console.log('sortOrder:', sortOrder);
+        console.log('Final query:', query);
 
-        res.status(200).json({
+        res.status(200).json({ 
             count: applications.rows.length,
-            applications: applications.rows
+            applications: applications.rows 
         });
-    } catch (err)  {
+
+    } catch (err) {
         res.status(500).json({ message: 'Server error.', error: err.message });
     }
 };
 
-const updateApplication = async (req, res) =>  {
+const updateApplication = async (req, res) => {
     const { id } = req.params;
     const { company, role, status, date_applied, notes } = req.body;
     const user_id = req.user.id;
 
-    try  {
+    try {
         const application = await pool.query(
             'SELECT * FROM applications WHERE id = $1 AND user_id = $2',
             [id, user_id]
         );
 
-        if(application.rows.length === 0)  {
+        if (application.rows.length === 0) {
             return res.status(404).json({ message: 'Application not found.' });
         }
 
@@ -67,44 +93,44 @@ const updateApplication = async (req, res) =>  {
             [company, role, status, date_applied, notes, id]
         );
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Application updated successfully.',
             application: updatedApplication.rows[0]
         });
 
-    } catch(err)  {
+    } catch (err) {
         res.status(500).json({ message: 'Server error.', error: err.message });
     }
 };
 
-const deleteApplication = async (req, res) =>  {
+const deleteApplication = async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.id;
 
-    try  {
+    try {
         const application = await pool.query(
             'SELECT * FROM applications WHERE id = $1 AND user_id = $2',
             [id, user_id]
         );
 
-        if(application.rows.length === 0)  {
+        if (application.rows.length === 0) {
             return res.status(404).json({ message: 'Application not found.' });
         }
 
         await pool.query('DELETE FROM applications WHERE id = $1', [id]);
-        
-        res.status(200).json({ message: 'Application deleted successfully.'});
+
+        res.status(200).json({ message: 'Application deleted successfully.' });
     } catch (err) {
         res.status(500).json({ message: 'Server error.', error: err.message });
     }
 }
 
-    const getStats = async (req, res) =>  {
-        const user_id = req.user.id;
+const getStats = async (req, res) => {
+    const user_id = req.user.id;
 
-        try  {
-            const stats = await pool.query(
-                `SELECT
+    try {
+        const stats = await pool.query(
+            `SELECT
                     COUNT(*) AS total,
                     COUNT(CASE WHEN status = 'Applied' THEN 1 END) AS applied,
                     COUNT(CASE WHEN status = 'Interview Scheduled' THEN 1 END) AS interviews,
@@ -112,18 +138,18 @@ const deleteApplication = async (req, res) =>  {
                     COUNT(CASE WHEN status = 'Offer Received' THEN 1 END) AS offers
                     FROM applications
                     WHERE user_id = $1`,
-                    [user_id]
-            );
-            res.status(200).json({stats: stats.rows[0]});
-        } catch(err)  {
-            res.status(500).json({ message: 'Server error.', error: err.message });
-        }
-    };
+            [user_id]
+        );
+        res.status(200).json({ stats: stats.rows[0] });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error.', error: err.message });
+    }
+};
 
-module.exports = { 
-    addApplication, 
-    getApplications, 
-    updateApplication, 
+module.exports = {
+    addApplication,
+    getApplications,
+    updateApplication,
     deleteApplication,
-    getStats 
+    getStats
 };
