@@ -14,12 +14,14 @@ const reminderRoutes = require('./routes/reminderRoutes');
 const { sendReminders } = require('./controllers/reminderController');
 const resumeRoutes = require('./routes/resumeRoutes');
 const exportRoutes = require('./routes/exportRoutes');
+const resumeAnalyzerRoutes = require('./routes/resumeAnalyzerRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/analyzer', resumeAnalyzerRoutes);
 
 setInterval(sendReminders, 5 * 60 * 1000);
 
