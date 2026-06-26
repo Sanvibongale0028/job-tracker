@@ -4,8 +4,8 @@ const verifyToken = require('../middleware/auth');
 const upload = require('../config/multer');
 const { uploadResume, getResume } = require('../controllers/resumeController');
 
-router.post('/upload', verifyToken, upload.single('resume'), uploadResume);
-router.put('/update', verifyToken, upload.single('resume'), uploadResume);
+router.post('/upload', verifyToken, upload.single('file'), uploadResume);
+router.put('/update', verifyToken, upload.single('file'), uploadResume);
 router.get('/', verifyToken, getResume);
 
 module.exports = router;
