@@ -20,7 +20,6 @@
 //             const res = await api.get('/api/resume');
 //             setResumeUrl(res.data.resume_url);
 //         } catch (err) {
-//             // 404 just means no resume yet — not an error worth toasting
 //             if (err.response?.status !== 404) {
 //                 toast.error('Failed to fetch resume');
 //             }
@@ -32,17 +31,15 @@
 //     const handleUpload = async (e) => {
 //         const file = e.target.files[0];
 //         if (!file) return;
-
 //         const formData = new FormData();
 //         formData.append('file', file);
-
 //         setUploading(true);
 //         try {
 //             const res = await api.post('/api/resume/upload', formData, {
 //                 headers: { 'Content-Type': 'multipart/form-data' }
 //             });
 //             setResumeUrl(res.data.file.url);
-//             setAnalysis(null); // clear old analysis on new upload
+//             setAnalysis(null);
 //             toast.success('Resume uploaded successfully!');
 //         } catch (err) {
 //             toast.error(err.response?.data?.message || 'Upload failed');
@@ -66,6 +63,12 @@
 
 //     if (loadingResume) return <div className="loading">Loading...</div>;
 
+//     const levels = [
+//         { value: 'fresher', label: '🎓 Fresher', sub: '0 years' },
+//         { value: 'intermediate', label: '💼 Intermediate', sub: '1–2 years' },
+//         { value: 'experienced', label: '🚀 Experienced', sub: '2+ years' },
+//     ];
+
 //     return (
 //         <div>
 //             <Navbar />
@@ -79,6 +82,41 @@
 //                     {resumeUrl ? (
 //                         <div className="resume-preview">
 //                             <p>Resume uploaded ✅</p>
+
+//                             {/* Experience Level Selector */}
+//                             <div className="my-4">
+//                                 <label className="text-sm font-medium text-slate-700 block mb-2">
+//                                     Analyze as
+//                                 </label>
+//                                 <div className="flex flex-wrap gap-2">
+//                                     {levels.map(level => (
+//                                         <button
+//                                             key={level.value}
+//                                             type="button"
+//                                             onClick={() => {
+//                                                 setExperienceLevel(level.value);
+//                                                 setAnalysis(null); // clear old analysis on level change
+//                                             }}
+//                                             className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+//                                                 experienceLevel === level.value
+//                                                     ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+//                                                     : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600'
+//                                             }`}
+//                                         >
+//                                             {level.label}
+//                                             <span className={`ml-1 text-xs ${
+//                                                 experienceLevel === level.value
+//                                                     ? 'text-blue-100'
+//                                                     : 'text-slate-400'
+//                                             }`}>
+//                                                 ({level.sub})
+//                                             </span>
+//                                         </button>
+//                                     ))}
+//                                 </div>
+//                             </div>
+
+//                             {/* Action Buttons */}
 //                             <div className="resume-actions">
 //                                 <a href={resumeUrl} target="_blank" rel="noreferrer">
 //                                     <button className="btn btn-secondary">View Resume</button>
@@ -98,7 +136,7 @@
 //                                     onClick={handleAnalyze}
 //                                     disabled={analyzing}
 //                                 >
-//                                     {analyzing ? 'Analyzing...' : '✨ Analyze with AI'}
+//                                     {analyzing ? 'Analyzing...' : '✨ Analyze Resume'}
 //                                 </button>
 //                             </div>
 //                         </div>
@@ -123,11 +161,30 @@
 //                 {analysis && (
 //                     <div className="analysis-container">
 
-//                         {/* Score */}
+//                         {/* Score + level badge */}
 //                         <div className="analysis-score-card">
-//                             <h2>Resume Score</h2>
+//                             <div>
+//                                 <h2>Resume Score</h2>
+//                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+//                                     experienceLevel === 'fresher'
+//                                         ? 'bg-blue-100 text-blue-700'
+//                                         : experienceLevel === 'intermediate'
+//                                         ? 'bg-amber-100 text-amber-700'
+//                                         : 'bg-emerald-100 text-emerald-700'
+//                                 }`}>
+//                                     {levels.find(l => l.value === experienceLevel)?.label}
+//                                 </span>
+//                             </div>
 //                             <div className="score-circle">
-//                                 <span>{analysis.resume_score}</span>
+//                                 <span className={
+//                                     analysis.resume_score >= 75
+//                                         ? 'text-4xl font-bold text-emerald-500'
+//                                         : analysis.resume_score >= 50
+//                                         ? 'text-4xl font-bold text-amber-500'
+//                                         : 'text-4xl font-bold text-red-500'
+//                                 }>
+//                                     {analysis.resume_score}
+//                                 </span>
 //                                 <small>/100</small>
 //                             </div>
 //                         </div>
@@ -209,12 +266,28 @@ import api from '../utils/api';
 import Navbar from '../components/layout/Navbar';
 import toast from 'react-hot-toast';
 
+const EXPERIENCE_LEVELS = [
+    { value: 'fresher', label: '🎓 Fresher', sub: '0 years' },
+    { value: 'intermediate', label: '💼 Intermediate', sub: '1–2 years' },
+    { value: 'experienced', label: '🚀 Experienced', sub: '2+ years' },
+];
+
+const ROLE_TYPES = [
+    { value: 'software-development', label: '⚙️ Software Development', sub: 'SDE, backend, fullstack' },
+    { value: 'frontend', label: '🎨 Frontend / UI', sub: 'React, CSS, UI/UX' },
+    { value: 'data-science', label: '📊 Data Science / ML', sub: 'Python, ML, analytics' },
+    { value: 'devops', label: '☁️ DevOps / Cloud', sub: 'Docker, AWS, CI/CD' },
+    { value: 'product-management', label: '📋 Product Management', sub: 'PM, strategy' },
+    { value: 'general', label: '🌐 General / Any', sub: 'Broad evaluation' },
+];
+
 function Resume() {
     const [resumeUrl, setResumeUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [analyzing, setAnalyzing] = useState(false);
     const [analysis, setAnalysis] = useState(null);
     const [experienceLevel, setExperienceLevel] = useState('fresher');
+    const [roleType, setRoleType] = useState('software-development');
     const [loadingResume, setLoadingResume] = useState(true);
 
     useEffect(() => {
@@ -257,7 +330,9 @@ function Resume() {
     const handleAnalyze = async () => {
         setAnalyzing(true);
         try {
-            const res = await api.get(`/api/analyzer/analyze?experience_level=${experienceLevel}`);
+            const res = await api.get(
+                `/api/analyzer/analyze?experience_level=${experienceLevel}&role_type=${roleType}`
+            );
             setAnalysis(res.data.analysis);
             toast.success('Analysis complete!');
         } catch (err) {
@@ -269,11 +344,8 @@ function Resume() {
 
     if (loadingResume) return <div className="loading">Loading...</div>;
 
-    const levels = [
-        { value: 'fresher', label: '🎓 Fresher', sub: '0 years' },
-        { value: 'intermediate', label: '💼 Intermediate', sub: '1–2 years' },
-        { value: 'experienced', label: '🚀 Experienced', sub: '2+ years' },
-    ];
+    const selectedLevel = EXPERIENCE_LEVELS.find(l => l.value === experienceLevel);
+    const selectedRole = ROLE_TYPES.find(r => r.value === roleType);
 
     return (
         <div>
@@ -281,7 +353,6 @@ function Resume() {
             <div className="resume-container">
                 <h1>Resume</h1>
 
-                {/* Upload Section */}
                 <div className="resume-card">
                     <h2>Your Resume</h2>
 
@@ -289,19 +360,19 @@ function Resume() {
                         <div className="resume-preview">
                             <p>Resume uploaded ✅</p>
 
-                            {/* Experience Level Selector */}
-                            <div className="my-4">
+                            {/* Experience Level */}
+                            <div className="mt-4 mb-3">
                                 <label className="text-sm font-medium text-slate-700 block mb-2">
-                                    Analyze as
+                                    Experience Level
                                 </label>
                                 <div className="flex flex-wrap gap-2">
-                                    {levels.map(level => (
+                                    {EXPERIENCE_LEVELS.map(level => (
                                         <button
                                             key={level.value}
                                             type="button"
                                             onClick={() => {
                                                 setExperienceLevel(level.value);
-                                                setAnalysis(null); // clear old analysis on level change
+                                                setAnalysis(null);
                                             }}
                                             className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
                                                 experienceLevel === level.value
@@ -311,11 +382,40 @@ function Resume() {
                                         >
                                             {level.label}
                                             <span className={`ml-1 text-xs ${
-                                                experienceLevel === level.value
-                                                    ? 'text-blue-100'
-                                                    : 'text-slate-400'
+                                                experienceLevel === level.value ? 'text-blue-100' : 'text-slate-400'
                                             }`}>
                                                 ({level.sub})
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Role Type */}
+                            <div className="mb-4">
+                                <label className="text-sm font-medium text-slate-700 block mb-2">
+                                    Target Role
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {ROLE_TYPES.map(role => (
+                                        <button
+                                            key={role.value}
+                                            type="button"
+                                            onClick={() => {
+                                                setRoleType(role.value);
+                                                setAnalysis(null);
+                                            }}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                                                roleType === role.value
+                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                                            }`}
+                                        >
+                                            {role.label}
+                                            <span className={`ml-1 text-xs ${
+                                                roleType === role.value ? 'text-indigo-100' : 'text-slate-400'
+                                            }`}>
+                                                ({role.sub})
                                             </span>
                                         </button>
                                     ))}
@@ -367,19 +467,24 @@ function Resume() {
                 {analysis && (
                     <div className="analysis-container">
 
-                        {/* Score + level badge */}
+                        {/* Score card with context badges */}
                         <div className="analysis-score-card">
                             <div>
                                 <h2>Resume Score</h2>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                                    experienceLevel === 'fresher'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : experienceLevel === 'intermediate'
-                                        ? 'bg-amber-100 text-amber-700'
-                                        : 'bg-emerald-100 text-emerald-700'
-                                }`}>
-                                    {levels.find(l => l.value === experienceLevel)?.label}
-                                </span>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        experienceLevel === 'fresher'
+                                            ? 'bg-blue-100 text-blue-700'
+                                            : experienceLevel === 'intermediate'
+                                            ? 'bg-amber-100 text-amber-700'
+                                            : 'bg-emerald-100 text-emerald-700'
+                                    }`}>
+                                        {selectedLevel?.label}
+                                    </span>
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                                        {selectedRole?.label}
+                                    </span>
+                                </div>
                             </div>
                             <div className="score-circle">
                                 <span className={
@@ -397,7 +502,6 @@ function Resume() {
 
                         <div className="analysis-grid">
 
-                            {/* Skills */}
                             <div className="analysis-card">
                                 <h3>🛠 Skills Detected</h3>
                                 <div className="tag-list">
@@ -407,7 +511,6 @@ function Resume() {
                                 </div>
                             </div>
 
-                            {/* Suggested Roles */}
                             <div className="analysis-card">
                                 <h3>🎯 Suggested Roles</h3>
                                 <div className="tag-list">
@@ -417,7 +520,6 @@ function Resume() {
                                 </div>
                             </div>
 
-                            {/* Missing Skills */}
                             <div className="analysis-card">
                                 <h3>⚠️ Missing Skills</h3>
                                 <div className="tag-list">
@@ -427,7 +529,6 @@ function Resume() {
                                 </div>
                             </div>
 
-                            {/* Strengths */}
                             <div className="analysis-card">
                                 <h3>✅ Strengths</h3>
                                 <ul>
@@ -437,7 +538,6 @@ function Resume() {
                                 </ul>
                             </div>
 
-                            {/* Weaknesses */}
                             <div className="analysis-card">
                                 <h3>❌ Weaknesses</h3>
                                 <ul>
@@ -447,7 +547,6 @@ function Resume() {
                                 </ul>
                             </div>
 
-                            {/* Improvement Suggestions */}
                             <div className="analysis-card">
                                 <h3>💡 Improvement Suggestions</h3>
                                 <ul>
