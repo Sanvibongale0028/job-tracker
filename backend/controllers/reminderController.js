@@ -78,20 +78,48 @@ const sendReminders = async () => {
   }
 };
 
+// const getReminders = async (req, res) => {
+//     try {
+//         const reminders = await pool.query(
+//             `SELECT r.*, a.company, a.role 
+//              FROM reminders r
+//              JOIN applications a ON r.application_id = a.id
+//              WHERE a.user_id = $1
+//              ORDER BY r.reminder_date ASC`,
+//             [req.user.id]
+//         );
+//         res.status(200).json({ reminders: reminders.rows });
+//     } catch (err) {
+//         res.status(500).json({ message: 'Server error.', error: err.message });
+//     }
+// };
+
 const getReminders = async (req, res) => {
-    try {
-        const reminders = await pool.query(
-            `SELECT r.*, a.company, a.role 
+  try {
+    // ✅ auto-delete reminders whose date has passed and were never sent
+    await pool.query(
+      `DELETE FROM reminders 
+             WHERE reminder_date < NOW() 
+             AND sent = false
+             AND application_id IN (
+                SELECT id FROM applications WHERE user_id = $1
+             )`,
+      [req.user.id]
+    );
+
+    const reminders = await pool.query(
+      `SELECT r.*, a.company, a.role 
              FROM reminders r
              JOIN applications a ON r.application_id = a.id
              WHERE a.user_id = $1
              ORDER BY r.reminder_date ASC`,
-            [req.user.id]
-        );
-        res.status(200).json({ reminders: reminders.rows });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error.', error: err.message });
-    }
+      [req.user.id]
+    );
+
+    res.status(200).json({ reminders: reminders.rows });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.', error: err.message });
+  }
 };
 
 module.exports = { addReminder, sendReminders, getReminders };
