@@ -12,14 +12,27 @@ function Register() {
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setLoading(true);
+    //     try {
+    //         const res = await api.post('/api/auth/register', formData);
+    //         login(res.data.user, res.data.token);
+    //         toast.success('Account created successfully!');
+    //         navigate('/dashboard');
+    //     } catch (err) {
+    //         toast.error(err.response?.data?.message || 'Something went wrong');
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await api.post('/api/auth/register', formData);
-            login(res.data.user, res.data.token);
-            toast.success('Account created successfully!');
-            navigate('/dashboard');
+            await api.post('/api/auth/register', formData);
+            toast.success('Account created! Check your email to verify.');
+            navigate('/login');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Something went wrong');
         } finally {
