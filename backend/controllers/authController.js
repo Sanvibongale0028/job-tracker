@@ -3,39 +3,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const validateEmail = async (email) => {
-    const apiKey = process.env.ABSTRACT_API_KEY;
-    const response = await fetch(
-        `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${email}`
-    );
-    const data = await response.json();
-    if (
-        data.deliverability !== 'DELIVERABLE' ||
-        data.is_valid_format?.value === false
-    ) {
-        return false;
-    }
-    return true;
-};
-
 const register = async (req, res) => {
     const { name, email, password } = req.body;
     try {
-
-        // safer validation — if API is down, allow registration to proceed
-        let isValidEmail = true;
-        try {
-            isValidEmail = await validateEmail(email);
-        } catch (validationErr) {
-            console.error('Email validation API failed:', validationErr.message);
-        }
-
-        if (!isValidEmail) {
-            return res.status(400).json({
-                message: 'This email address does not exist or cannot receive emails, Please use a valid email address.'
-            });
-        }
-
         const existingUser = await pool.query(
             'SELECT * FROM users WHERE email = $1',
             [email]
