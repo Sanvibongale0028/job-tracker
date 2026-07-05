@@ -45,9 +45,9 @@ A full-stack web application to track job applications, analyze resumes using AI
 - Backend — Render (Dockerized)
 - Database — Supabase (PostgreSQL)
 
----
-
 ## Project Structure
+
+```
 job-tracker/
 ├── backend/
 │   ├── config/
@@ -75,27 +75,27 @@ job-tracker/
 │   └── Dockerfile
 │
 └── frontend/
-├── src/
-│   ├── components/
-│   │   └── layout/
-│   │       └── Navbar.jsx
-│   ├── context/
-│   │   └── AuthContext.jsx
-│   ├── pages/
-│   │   ├── Login.jsx
-│   │   ├── Register.jsx
-│   │   ├── Dashboard.jsx
-│   │   ├── Applications.jsx
-│   │   ├── Analytics.jsx
-│   │   ├── Resume.jsx
-│   │   └── Reminders.jsx
-│   ├── utils/
-│   │   └── api.js
-│   ├── App.jsx
-│   └── main.jsx
-└── public/
-└── vercel.json
----
+    ├── src/
+    │   ├── components/
+    │   │   └── layout/
+    │   │       └── Navbar.jsx
+    │   ├── context/
+    │   │   └── AuthContext.jsx
+    │   ├── pages/
+    │   │   ├── Login.jsx
+    │   │   ├── Register.jsx
+    │   │   ├── Dashboard.jsx
+    │   │   ├── Applications.jsx
+    │   │   ├── Analytics.jsx
+    │   │   ├── Resume.jsx
+    │   │   └── Reminders.jsx
+    │   ├── utils/
+    │   │   └── api.js
+    │   ├── App.jsx
+    │   └── main.jsx
+    └── public/
+        └── vercel.json
+```
 
 ## API Endpoints
 
@@ -189,6 +189,7 @@ cd backend
 npm install
 ```
 
+```
 Create `.env` in the backend folder:
 PORT=5000
 DATABASE_URL=your_supabase_connection_string
@@ -198,6 +199,7 @@ EMAIL_PASS=your_gmail_app_password
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 GROQ_API_KEY=your_groq_api_key
+```
 
 ```bash
 node server.js
